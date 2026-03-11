@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "equityrt-api-client"
+version = "0.1.0"
+description = "Unofficial Python client for EquityRT API"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+  { name = "Marvin Rucinski" }
+]
+keywords = ["equityrt", "api", "client", "finance"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "License :: Other/Proprietary License",
+  "Operating System :: OS Independent"
+]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["equityrt_api_client*"]

@@ -46,6 +46,7 @@ class EquityRTClient:
         )
 
     def add_in(self, version: str, token: str | None = None) -> Any:
+        '''Information about available functions and their parameters for given version'''
         payload = {"Version": version, "Token": token or self._require_token()}
         return self._post_jcontent("/excel/dataservice/Connector.svc/json/AddIn", payload)
 
@@ -55,6 +56,7 @@ class EquityRTClient:
         source_code: str,
         token: str | None = None,
     ) -> Any:
+        ''''Search for functions and parameters matching the text.'''
         payload = {
             "Text": text,
             "SourceCode": source_code,
@@ -72,6 +74,7 @@ class EquityRTClient:
         zones: list[Any] | None = None,
         token: str | None = None,
     ) -> Any:
+        '''List of countries with available data, optionally filtered by classifications and zones.'''
         payload = {
             "Token": token or self._require_token(),
             "Classifications": classifications if classifications is not None else [],
@@ -88,6 +91,7 @@ class EquityRTClient:
         countries: list[str],
         token: str | None = None,
     ) -> Any:
+        '''List of available sources (exchanges) for given countries.'''
         payload = {
             "Countries": countries,
             "Token": token or self._require_token(),
@@ -108,6 +112,7 @@ class EquityRTClient:
         is_financial_wizard: bool = False,
         token: str | None = None,
     ) -> Any:
+        '''List of securities for given source (exchange) and date range, optionally filtered by classifications and peers.'''
         payload = {
             "Code": source_code,
             "Classifications": (
@@ -144,6 +149,7 @@ class EquityRTClient:
         grid_type: str,
         token: str | None = None,
     ) -> Any:
+        '''Get sample excel formula'''
         payload = {
             "FormulaObjectId": formula_object_id,
             "SourceCode": source_code,
@@ -163,6 +169,7 @@ class EquityRTClient:
         authentication_type: str = "UsernamePassword",
         set_as_default_token: bool = True,
     ) -> str:
+        '''Authenticate with username and password to get a token for further requests.'''
         payload = {
             "Username": username,
             "Password": password,
@@ -192,6 +199,7 @@ class EquityRTClient:
         token: str | None = None,
         culture_info: dict[str, Any] | None = None,
     ) -> Any:
+        '''Invoke functions with given parameters and culture info.'''
         payload: dict[str, Any] = {
             "Token": token or self._require_token(),
             "Functions": functions,
