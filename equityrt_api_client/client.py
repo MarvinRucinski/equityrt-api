@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from typing import Any, Iterable
 from urllib import error, request
 
+from .wrappers.function_warapper import FunctionWrapper
+
 
 DEFAULT_BASE_URLS = [
     "https://webstation-datagate1.equityrt.com",
@@ -23,7 +25,7 @@ class AttemptError:
     message: str
 
 
-class EquityRTClient:
+class EquityRTClient(FunctionWrapper):
     def __init__(
         self,
         token: str | None = None,
