@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Any, Iterable
 from urllib import error, request
 
+from .wrappers.function_search import FunctionSearchMixin
 from .wrappers.function_warapper import FunctionWrapper
 from .wrappers.helpers import HellperWrapper
 
@@ -26,7 +27,7 @@ class AttemptError:
     message: str
 
 
-class EquityRTClient(FunctionWrapper, HellperWrapper):
+class EquityRTClient(FunctionSearchMixin, FunctionWrapper, HellperWrapper):
     def __init__(
         self,
         token: str | None = None,

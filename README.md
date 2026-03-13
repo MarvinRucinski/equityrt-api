@@ -42,6 +42,7 @@ print(addin_result)
 - `add_in(version, token=None)`
 - `invoke(functions, token=None, culture_info=None)`
 - `function_list_search_field(text, source_code, token=None)`
+- `interactive_function_search(source_code, grid_type="Search", initial_text="", max_results=12, min_query_len=1, token=None)`
 - `select_countries(classifications=None, zones=None, token=None)`
 - `source_list(countries, token=None)`
 - `select_securities(source_code, date1, date2, classifications=None, peers=None, is_financial_wizard=False, token=None)`
@@ -50,6 +51,34 @@ print(addin_result)
 ---
 
 ## Usage Examples
+
+### CLI interactive search (single command)
+
+After installing the package, run:
+
+```bash
+equityrt-function-search --token "$EQUITYRT_TOKEN" --source-code PL --initial-text clos
+```
+
+or using only environment variables:
+
+```bash
+export EQUITYRT_TOKEN="YOUR_TOKEN"
+export EQUITYRT_SOURCE_CODE="PL"
+equityrt-function-search --initial-text clos
+```
+
+If token is not provided, CLI can authenticate from `.env` credentials:
+
+```bash
+cat > .env << 'EOF'
+EQUITYRT_USERNAME=email@email.com
+EQUITYRT_PASSWORD=YOUR_PASSWORD
+EQUITYRT_SOURCE_CODE=PL
+EOF
+
+equityrt-function-search --initial-text clos
+```
 
 ### Get add-in information (e.g. available functions and parameters)
 
@@ -64,6 +93,29 @@ print(addin_info)
 search_result = client.function_list_search_field(text="clos", source_code="PL")
 print(search_result)
 ```
+
+### Interactive function search (CLI)
+
+```python
+result = client.interactive_function_search(
+	source_code="PL",
+	initial_text="clos",
+	grid_type="Search",
+)
+
+if result:
+	print(result["formula_object_id"])
+	print(result["populate_formula_grid"])
+```
+
+Controls:
+
+- type to edit search query
+- press `Enter` to run search (and `Enter` again to select highlighted result)
+- up/down arrows to select
+- description of the highlighted function is shown under the list
+- optional: `Ctrl+S` or `F5` also run search
+- `Esc` to exit without selection (`q` exits only when search input is empty)
 
 ### List countries
 

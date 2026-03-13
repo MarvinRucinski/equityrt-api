@@ -12,12 +12,18 @@ authors = [
   { name = "Marvin Rucinski" }
 ]
 keywords = ["equityrt", "api", "client", "finance"]
+dependencies = [
+  "python-dotenv>=1.0.0"
+]
 classifiers = [
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
   "License :: Other/Proprietary License",
   "Operating System :: OS Independent"
 ]
+
+[project.scripts]
+equityrt-function-search = "equityrt_api_client.cli:main"
 
 [tool.setuptools]
 include-package-data = true

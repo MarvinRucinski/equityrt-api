@@ -31,6 +31,46 @@ class FunctionCall:
         return formatted_args
     
     @classmethod
+    def _split_excel_args(cls, args_body: str):
+        """Split Excel arguments using top-level ';' or ',' delimiters."""
+        args = []
+        current = []
+        in_quotes = False
+        paren_depth = 0
+
+        i = 0
+        while i < len(args_body):
+            ch = args_body[i]
+
+            if ch == '"':
+                # Excel escapes quote inside strings as "".
+                if in_quotes and i + 1 < len(args_body) and args_body[i + 1] == '"':
+                    current.append('"')
+                    i += 2
+                    continue
+                in_quotes = not in_quotes
+                current.append(ch)
+                i += 1
+                continue
+
+            if not in_quotes:
+                if ch == '(':
+                    paren_depth += 1
+                elif ch == ')' and paren_depth > 0:
+                    paren_depth -= 1
+                elif paren_depth == 0 and ch in (';', ','):
+                    args.append(''.join(current).strip())
+                    current = []
+                    i += 1
+                    continue
+
+            current.append(ch)
+            i += 1
+
+        args.append(''.join(current).strip())
+        return args
+
+    @classmethod
     def from_excel_function(cls, client, excel_func_str: str):
         '''
         Parse an Excel function string and create a FunctionCall instance.
@@ -39,7 +79,7 @@ class FunctionCall:
         '''
         excel_func_str = excel_func_str.lstrip('=').lstrip('+').strip('@')
         func_name, args_str = excel_func_str.split('(', 1)
-        args = args_str.rsplit(')', 1)[0].split(';')
+        args = cls._split_excel_args(args_str.rsplit(')', 1)[0])
         python_args = []
         for arg in args:
             arg = arg.strip()
