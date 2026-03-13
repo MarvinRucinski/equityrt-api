@@ -32,6 +32,11 @@ class FunctionCall:
     
     @classmethod
     def from_excel_function(cls, client, excel_func_str: str):
+        '''
+        Parse an Excel function string and create a FunctionCall instance.
+
+        Example use case: FunctionCall.from_excel_function(client, '=+RasFinancialTrailingDataSeries("PKN:PL";"2024/YE";"2025/YE";;"Income Statement";;;;1000000;;;FALSE;TRUE)')
+        '''
         excel_func_str = excel_func_str.lstrip('=').lstrip('+').strip('@')
         func_name, args_str = excel_func_str.split('(', 1)
         args = args_str.rsplit(')', 1)[0].split(';')
@@ -57,6 +62,8 @@ class FunctionCall:
         return cls(function=func_name, args=args)
     
     def add_param_names(self, client):
+        '''
+        Add parameter names to the arguments based on the function definition.'''
         params = client.get_function_params(self.function)
         args = {}
         for (param, arg) in zip(params, self.args):
