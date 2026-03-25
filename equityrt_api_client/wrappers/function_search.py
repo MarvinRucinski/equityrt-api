@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from typing import Callable
 from typing import Any
 
 
@@ -37,18 +38,45 @@ class FunctionSearchMixin:
 		status = "Type query and press Enter to search."
 		last_loaded_query: str | None = None
 
+		def request_with_token_refresh(
+			request_fn: Callable[[str | None], Any],
+			explicit_token: str | None,
+		) -> Any:
+			response = request_fn(explicit_token)
+			status = response.get("Status") if isinstance(response, dict) else None
+			if status != "TokenExpire":
+				return response
+
+			reauth = getattr(self, "reauthenticate", None)
+			if not callable(reauth):
+				raise RuntimeError(
+					"Token expired and client cannot reauthenticate. "
+					"Provide credentials and call authenticate() first."
+				)
+
+			new_token = reauth()
+			return request_fn(new_token)
+
 		def load_items() -> tuple[list[dict[str, Any]], str]:
 			if len(query) < min_query_len:
 				return [], f"Type at least {min_query_len} character(s)."
 
 			try:
-				response = self.function_list_search_field(
-					text=query,
-					source_code=source_code,
-					token=token,
+				response = request_with_token_refresh(
+					lambda auth_token: self.function_list_search_field(
+						text=query,
+						source_code=source_code,
+						token=auth_token,
+					),
+					token,
 				)
 			except Exception as exc:
 				return [], f"Search failed: {exc}"
+
+			status = response.get("Status") if isinstance(response, dict) else None
+			if status and status != "Ok":
+				message = response.get("Message") if isinstance(response, dict) else None
+				return [], f"Search failed: status={status}, message={message}"
 
 			extracted = self._extract_function_items(response)
 			if not extracted:
@@ -140,12 +168,19 @@ class FunctionSearchMixin:
 							status = "Selected item has no FormulaObjectId."
 							continue
 
-						grid_result = self.populate_formula_grid(
-							formula_object_id=formula_object_id,
-							source_code=source_code,
-							grid_type=grid_type,
-							token=token,
-						)
+						try:
+							grid_result = request_with_token_refresh(
+								lambda auth_token: self.populate_formula_grid(
+									formula_object_id=formula_object_id,
+									source_code=source_code,
+									grid_type=grid_type,
+									token=auth_token,
+								),
+								token,
+							)
+						except Exception as exc:
+							status = f"Grid request failed: {exc}"
+							continue
 						return {
 							"query": query,
 							"selected": selected_item,

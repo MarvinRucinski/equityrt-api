@@ -1,3 +1,9 @@
+import logging
+
+
+logger = logging.getLogger(__name__)
+
+
 class FunctionCall:
     def __init__(self, function, args=None):
         self.function = function
@@ -87,8 +93,8 @@ class FunctionCall:
                 python_args.append(arg[1:-1])
             elif arg.replace('.', '', 1).isdigit():
                 python_args.append(float(arg))
-            elif arg.lower() in ['true', 'false']:
-                python_args.append(arg.lower() == 'true')
+            elif arg.lower() in ['true', 'false', 'true()', 'false()']:
+                python_args.append(arg.lower() in ['true', 'true()'])
             elif arg == '':
                 python_args.append(None)
             else:            
@@ -149,8 +155,26 @@ class FunctionWrapper:
             culture_info=culture_info,
         )
 
-        if not result.get('Status') == 'Ok':
-            raise Exception(f"Function call failed with status: {result.get('Status')}, message: {result.get('Message')}")
+        status = result.get("Status")
+        if status == "TokenExpire":
+            reauth = getattr(self, "reauthenticate", None)
+            if not callable(reauth):
+                raise Exception(
+                    "Function call failed with status: TokenExpire, "
+                    "and client cannot reauthenticate."
+                )
+            logger.warning("Function call returned TokenExpire. Retrying after reauthentication.")
+            reauth()
+            result = self.invoke(
+                functions=formated_functions,
+                culture_info=culture_info,
+            )
+            status = result.get("Status")
+
+        if status != "Ok":
+            raise Exception(
+                f"Function call failed with status: {status}, message: {result.get('Message')}"
+            )
         
         sorted_function_results = sorted(
             result.get("Results", []),

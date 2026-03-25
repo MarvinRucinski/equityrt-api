@@ -39,6 +39,8 @@ class EquityRTClient(FunctionSearchMixin, FunctionWrapper, HellperWrapper):
         base_urls: Iterable[str] = DEFAULT_BASE_URLS,
         timeout: float = 15.0,
         user_agent: str = "equityrt-api-client/0.1",
+        auth_username: str | None = None,
+        auth_password: str | None = None,
     ) -> None:
         self.token = token
         self.base_urls = [url.rstrip("/") for url in base_urls]
@@ -47,6 +49,8 @@ class EquityRTClient(FunctionSearchMixin, FunctionWrapper, HellperWrapper):
         self._last_used_base_url_index = -1
         self.timeout = timeout
         self.user_agent = user_agent
+        self._auth_username = auth_username
+        self._auth_password = auth_password
 
     def echo(self, version: str, echo: int, ua_cpu: str | None = "AMD64") -> Any:
         payload = {"Version": version, "Echo": echo}
@@ -207,8 +211,23 @@ class EquityRTClient(FunctionSearchMixin, FunctionWrapper, HellperWrapper):
 
         if set_as_default_token:
             self.token = token
+            self._auth_username = username
+            self._auth_password = password
 
         return token
+
+    def reauthenticate(self) -> str:
+        if not self._auth_username or not self._auth_password:
+            raise EquityRTApiError(
+                "Cannot reauthenticate: missing stored credentials. "
+                "Call authenticate(username, password) first."
+            )
+        logger.warning("Token expired. Reauthenticating...")
+        return self.authenticate(
+            username=self._auth_username,
+            password=self._auth_password,
+            set_as_default_token=True,
+        )
 
     def invoke(
         self,
